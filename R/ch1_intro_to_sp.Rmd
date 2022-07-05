@@ -14,7 +14,7 @@ library(sf)
 ```
 
 
-## Conceptualizing spatial vector objects in R
+## Conceptualizing spa)tial vector objects in R
 
 The foundational structure for any spatial object in {sp} is the `Spatial` class with two slots
 
@@ -124,6 +124,8 @@ pts_sf <- cbind(attrib_df, data.frame(pts)) |> st_as_sf(coords = c(2, 3))
 
 ## Creating a Spatial object from a lat/lon table
 
+### Using {Sf}
+
 An `sf` object can be created from a data frame using `st_as_sf()`
 
 ```{r df_to_sf}
@@ -154,5 +156,69 @@ To save the sf object as a shapefile we use `st_write()`
 
 st_write(philly_homicides_sf, "data/PhillyHomicides", driver = "ESRI Shapefile", delete_layer = TRUE)
 
+```
+
+### Using {sp})
+
+A SpatialPointsDataFrame object can be create directly from a dataframe by specifing which columns contain the coordinates and this is can be done with `coordinates()` function and *this approach replaces the original data frame* so be warned.
+
+```{r df_to_sp}
+
+philly_homicides_df <- subset(philly_homicides_df, select = -c(DISPATCH_TIME))
+
+coordinates(philly_homicides_df) <- c("POINT_X", "POINT_Y")
+
+class(philly_homicides_df)
+
+# assigning the projection
+
+is.projected(philly_homicides_df)
+
+proj4string(philly_homicides_df) <- CRS("+init=epsg:4326")
+```
+
+To save this sp object
+
+```{r df_to_sp_01}
+
+library(rgdal, quietly = TRUE)
+
+writeOGR(philly_homicides_df, "data/PhillyHomicides", "PhillyHomicides", driver = "ESRI Shapefile", overwrite_layer = TRUE)
+
+```
+
+> `writeOGR()` cannot convert data of class `hms`. So had to remove DISPATCH_TIME column just to avoid digggin in right now. But have to check a solution for this later.
+
+## Loading Shape files
+
+### Using sf
+
+```{r sf-read}
+
+philly_sf <- st_read("data/Philly")
+
+```
+
+As a side note: you can turn a sf dataframe back to normal non spatial dataframe using `st_drop_geometry()`
+
+```{r sf-plot}
+plot(philly_sf)
+
+```
+
+In order to plot only the polygon boundaries we need to specify to directly use geometry column with `st_geometry`
+
+```{r sf-geometry}
+plot(st_geometry(philly_sf))
+```
+
+To get only the polygons for which median income is > 60000 (actually we are adding layers on the original boundaries)
+
+```{r sf-geometry-01}
+
+philly_sf_rich <- subset(philly_sf, medHHinc > 60000)
+
+plot(st_geometry(philly_sf))
+plot(st_geometry(philly_sf_rich), add = TRUE, col = "red")
 ```
 
