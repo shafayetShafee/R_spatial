@@ -160,7 +160,7 @@ st_write(philly_homicides_sf, "data/PhillyHomicides", driver = "ESRI Shapefile",
 
 ### Using {sp})
 
-A SpatialPointsDataFrame object can be create directly from a dataframe by specifing which columns contain the coordinates and this is can be done with `coordinates()` function and *this approach replaces the original data frame* so be warned.
+A SpatialPointsDataFrame object can be create directly from a dataframe by specifing which columns contain the coordinates and this is can be done with `coordinates()` function and **this approach replaces the original data frame** so be warned.
 
 ```{r df_to_sp}
 
@@ -222,3 +222,58 @@ plot(st_geometry(philly_sf))
 plot(st_geometry(philly_sf_rich), add = TRUE, col = "red")
 ```
 
+
+> A little side note to the future you:
+you need to run the previous chunk (those three lines) together to get the above plot.
+
+
+### loading shapefile with  {sp}
+
+In order to read spatial data into R and to turn them into Spatial* family objects we require `rgdal` package which provides bindings to GDAL.
+
+> GDAL also known as GDAL/OGR, is a library of tools used for manipulating geospatial data (for both raster and vector data types) and its a open-source geospatial data IO library. GDAL supports over 200 raster formats and vector formats. We can use `ogrDrivers()` and `gdalDrivers()` to see which vector and raster formats `rgdal` supports.
+
+We can read in and write out spatial data using
+
+```
+readOGR() and writeOGR() for vector format
+readGDAL() and writeGDAL() for raster format
+```
+
+> A shapefile consists of various files of the same name but with different extensions. Shapefile consists of a collection of files with a common filename prefix, stored in the same directory. The three mandatory files have filename extensions `.shp`, `.shx`, `.dbf`. The actual shapefile relates specifically to the `.shp` file, but alone is incomplete for distribution as the other supporting files are required.
+
+**Mandatory files**
+- `.shp` - shape format: the feature geometry itself
+- `.shx` - shape index format: a positional index of the feature geometry to allow seeking forwards and backwards
+- `.dbf` - attribute format
+
+**Other files**
+`.prj` - projection description
+
+When reading in a shapefile `readOGR()` requires the following two arguments:
+
+```
+datasource name (dsn) => the path to the folder that contain the files. 
+                         this is a path to the folder, not a filename !!.
+
+layer name (layer) =>    the shapefile name WITHOUT extension
+                         this is not a path but just the name of the file !!
+```
+
+```{r read-sp}
+library(rgdal, quietly = TRUE)
+
+philly_sp <- readOGR("data/Philly", "PhillyTotalPopHHinc")
+
+class(philly_sp)
+```
+```{r plot-sp}
+plot(philly_sp)
+
+philly_sp_rich <- subset(philly_sp, medHHinc > 60000)
+
+plot(philly_sp_rich, add = TRUE, col = "red")
+```
+
+> A little side note to the future you:
+you need to run the previous chunk (those three lines) together to get the above plot.
