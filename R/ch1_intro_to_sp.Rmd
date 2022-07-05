@@ -122,4 +122,37 @@ sp_pts_dfr
 pts_sf <- cbind(attrib_df, data.frame(pts)) |> st_as_sf(coords = c(2, 3))
 ```
 
+## Creating a Spatial object from a lat/lon table
+
+An `sf` object can be created from a data frame using `st_as_sf()`
+
+```{r df_to_sf}
+
+philly_homicides_df <- readr::read_csv("data/philly_homicides.csv")
+
+philly_homicides_sf <- st_as_sf(philly_homicides_df,
+                                coords = c("POINT_X", "POINT_Y"))
+
+```
+
+
+To have a complete geo object we need to set a CRS. we assign the WGS84 projection which has the EPSG code 4326.
+
+On a side note: full form of EPSG is "European Petrolium Survey Group"
+
+```{r df_to_sf_01}
+
+st_crs(philly_homicides_sf)
+
+st_crs(philly_homicides_sf) <- 4326
+```
+
+
+To save the sf object as a shapefile we use `st_write()`
+
+```{r sf_to_shp}
+
+st_write(philly_homicides_sf, "data/PhillyHomicides", driver = "ESRI Shapefile", delete_layer = TRUE)
+
+```
 
