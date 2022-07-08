@@ -277,3 +277,128 @@ plot(philly_sp_rich, add = TRUE, col = "red")
 
 > A little side note to the future you:
 you need to run the previous chunk (those three lines) together to get the above plot.
+
+
+## Raster Data in R
+
+Raster files have a much more compact data structure than vectors. Because of their regular structure, coordinates do not need to be recorded for each pixel or cell.
+
+A raster is defined by 
+
+- a CRS
+- a coordinates of its origin
+- a distance or cell size in each direction
+- a dimension or number of cells in each direction
+- an array of cell values
+
+Given this structure, coordinates for any cell can be computed
+
+> Conversion from sp type to raster type is possible
+
+### Creating a raster object
+```{r raster-manual}
+library(raster)
+
+r <- raster(xmn = -0.5, ymn = -0.5, xmx = 4.5, ymx = 4.5, res = c(1,1))
+r
+```
+
+If x coordinates are withing -360 to 360 and y coordinates are within -90 to 90, then WGS84 projection is used by default.
+
+```{r raster-plot}
+class(r)
+
+r <- setValues(r, runif(25))
+
+plot(r)
+points(coordinates(r), pch = 3)
+```
+
+
+### creating raster from matrix
+```{r raster-02}
+class(volcano)
+
+volcano.r <- raster(volcano)
+
+class(volcano.r)
+```
+### reading raster from a file
+
+```{r reading-raster-file}
+
+HARV <- raster("data/HARV_RGB_Ortho.tif")
+
+HARV # An RasterLayer object
+
+plot(HARV)
+
+ncell(HARV)
+
+crs(HARV)
+
+## to get the metadata about a raster file
+rgdal::GDALinfo("data/HARV_RGB_Ortho.tif")
+```
+
+A raster dataset can contain one or more bands. To know the number of band,
+
+```{r}
+nlayers(HARV)
+```
+
+But note that from `GDALinfo` we see that there are 3 bands, to get more of these
+bands, we can specify while reading raster data
+
+```{r}
+HARV_2 <- raster("data/HARV_RGB_Ortho.tif", band = 2)
+HARV_2 # look at the `band` 
+
+# HARV_2 is an RasterLayer object
+
+plot(HARV_2)
+
+```
+
+To get all of the bands
+
+```{r}
+HARV_stack <- stack("data/HARV_RGB_Ortho.tif")
+
+nlayers(HARV_stack)
+
+HARV_stack # its an RasterStack object
+
+plot(HARV_stack)
+```
+
+
+If we know its an RGB multiband raster we can plot them all in one
+
+```{r}
+
+plotRGB(HARV_stack)
+```
+
+## RasterStack vs RasterBrick
+
+These both can store multiple bands but
+
+- RasterStack stores links to raster data that is located somewhere on our computer, thats why its object size is small
+- RasterBrick stores all the object as an R object. That's why its object.size is larger than the RasterStack object
+- But RasterBrick is often more efficient and faster to process which is important for large datafiles.
+
+```{r last}
+#library(lobstr)
+
+lobstr::obj_size(HARV_stack)
+
+# converting to rasterbrick
+
+HARV_brick <- brick(HARV_stack)
+
+lobstr::obj_size(HARV_brick)
+
+```
+
+## Ehh!! Confusing.......
