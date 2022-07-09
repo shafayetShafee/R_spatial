@@ -1,0 +1,55 @@
+---
+title: "Spatial Data Manipulation in R"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```
+
+
+## Attribute Join in sf
+
+Its the process of joining data in tabular format to a data in a format that holds geometries (point, line, polygon)
+
+```{r csv_read}
+library(sf)
+
+ph_edu <- read.csv("data/PhillyEducation.csv")
+names(ph_edu)
+
+philly_sf <- st_read("data/Philly/")
+names(philly_sf)
+```
+
+So merging by `GEOID10` which is same as `GEOID`
+
+```{r merge}
+philly_sf_merged <- merge(philly_sf, ph_edu, by.x = "GEOID10", by.y = "GEOID")
+
+names(philly_sf_merged)
+```
+
+## Attribute joins in sp
+
+```{r sp_join}
+
+philly_sp <- rgdal::readOGR("data/Philly/", "PhillyTotalPopHHinc")
+
+philly_sp_merged <- merge(philly_sp, ph_edu, by.x = "GEOID10", by.y = "GEOID")
+names(philly_sp_merged)
+```
+
+## Topological subsetting (select polygons by Location)
+
+we want to select all Philadelphia census tracts within a range of 2 kilometers from the city center.
+
+The steps could be
+
+1. Get the census tract polygons
+2. Find the philadelphia city center coordinates
+3. create a buffer around the city center point
+4. select all the census tract polygons that intersects with the center buffer.
+
+### Using sf package
+
